@@ -14,7 +14,7 @@ from sqlalchemy import select
 from .. import comprehension, languages
 from ..config import Settings
 from ..content.cache import StatsWorker
-from ..content.jellyfin import Episode, Jellyfin
+from ..content.jellyfin import Episode, Jellyfin, WatchState
 from ..content.library import Finder, Ingest
 from ..content.subtitles import korean_subtitles
 from ..db import Database, migrate
@@ -22,6 +22,7 @@ from ..knowledge import importer, service
 from ..knowledge.events import WordState
 from ..models import WordKnowledge
 from ..users import default_user_id
+from ..util import cached_for
 from . import schemas
 from .deps import Db
 from .library import router as library_router
@@ -35,8 +36,9 @@ def create_app(
     *,
     episodes: Callable[[], list[Episode]] | None = None,
     find: Finder | None = None,
+    watch: Callable[[], dict[str, WatchState]] | None = None,
 ) -> FastAPI:
-    """episodes / find replace Jellyfin and the subtitle finder (tests)."""
+    """episodes / find / watch replace Jellyfin and the subtitle finder (tests)."""
     settings = settings or Settings()
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     migrate(settings.db_url)
@@ -45,8 +47,10 @@ def create_app(
         default_user_id(s)
 
     stats_worker = StatsWorker(db)
-    if episodes is None and settings.jellyfin_api_key:
-        episodes = Jellyfin(settings.jellyfin_url, settings.jellyfin_api_key).episodes
+    if settings.jellyfin_api_key:
+        jf = Jellyfin(settings.jellyfin_url, settings.jellyfin_api_key)
+        episodes = episodes or jf.episodes
+        watch = watch or cached_for(60, lambda: jf.watch_states(settings.jellyfin_user), fallback=dict)
     ingest = None
     if episodes is not None:
         lang = settings.library_language
@@ -72,6 +76,8 @@ def create_app(
     app.state.db = db
     app.state.ingest = ingest
     app.state.stats = stats_worker
+    app.state.settings = settings
+    app.state.watch = watch or dict  # no Jellyfin: nothing watched
     app.include_router(library_router)
 
     def language(code: str) -> str:

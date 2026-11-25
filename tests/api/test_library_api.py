@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from lmx.api.app import create_app
 from lmx.config import Settings
-from lmx.content.jellyfin import Episode
+from lmx.content.jellyfin import Episode, WatchState
 from lmx.content.library import Ingest
 from lmx.content.store import Line
 
@@ -15,6 +15,7 @@ EPISODES = [
     Episode('a2', 'Running Man', 11, 2, 'E02', '/m/a2.mkv', 4000.0, True, True),
     Episode('b1', '나 혼자 산다', 1, 1, 'E01', '/m/b1.mkv', 3000.0, False, True),
 ]
+WATCH: dict[str, WatchState] = {}
 SUBS = {
     '/m/a1.mkv': ('stream:3', [Line(0, 900, '밥을 먹었다.'), Line(1000, 1900, '소나기가 왔다.')]),
     '/m/a2.mkv': ('file:a2.ko.srt', [Line(0, 900, '소나기가 쏟아졌다.')]),
@@ -24,9 +25,10 @@ SUBS = {
 @pytest.fixture
 def lib(tmp_path: Path) -> Iterator[TestClient]:
     app = create_app(
-        Settings(data_dir=tmp_path / 'd', library_autostart=False),
+        Settings(data_dir=tmp_path / 'd', library_autostart=False, jellyfin_public_url='https://tv.example/'),
         episodes=lambda: EPISODES,
         find=lambda p: SUBS.get(str(p)),
+        watch=lambda: WATCH,
     )
     ingest: Ingest = app.state.ingest
     ingest.run_once()
@@ -108,3 +110,27 @@ def test_disabled_without_jellyfin_key(client: TestClient) -> None:
 def test_jellyfin_key_enables_the_library(tmp_path: Path) -> None:
     app = create_app(Settings(data_dir=tmp_path / 'd', jellyfin_api_key='k', library_autostart=False))
     assert app.state.ingest is not None
+
+
+def test_next_up(lib: TestClient) -> None:
+    nxt = lib.get('/api/library/next').json()
+    assert [(n['title'], n['series_key']) for n in nxt] == [('E01', 'runningman'), ('E02', 'runningman')]
+    first = nxt[0]
+    assert first['reasons'][0] == '75% known (a stretch)'
+    assert first['open_url'] == 'https://tv.example/web/#/details?id=a1'
+    assert 0 <= first['score'] <= 1 and first['coverage'] == pytest.approx(0.75)
+
+
+def test_next_up_skips_watched_and_continues(lib: TestClient) -> None:
+    WATCH['a1'] = WatchState(True, 0.0, None)
+    try:
+        nxt = lib.get('/api/library/next').json()
+    finally:
+        WATCH.clear()
+    assert [n['title'] for n in nxt] == ['E02']
+    assert 'next episode of Running Man' in nxt[0]['reasons']
+
+
+def test_next_up_without_jellyfin(client: TestClient) -> None:
+    assert client.get('/api/library/next').json() == []
+    assert client.get('/api/library/next', params={'limit': 0}).status_code == 422

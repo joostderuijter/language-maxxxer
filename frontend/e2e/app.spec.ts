@@ -90,3 +90,11 @@ test('library page is reachable from the nav and explains when Jellyfin is not c
   // the e2e image has no Jellyfin key: the page must say so instead of showing an empty list
   await expect(page.getByTestId('library-disabled').or(page.getByTestId('library-status'))).toBeVisible();
 });
+
+test('landing page shows the Next up section', async ({ page }) => {
+  await page.goto('/');
+  const section = page.getByLabel('next up');
+  await expect(section).toBeVisible();
+  // the e2e image has no Jellyfin: empty state, explained
+  await expect(section.getByTestId('next-empty').or(section.getByRole('listitem').first())).toBeVisible();
+});

@@ -14,6 +14,7 @@ export type LibraryStatus = components['schemas']['LibraryStatus'];
 export type SeriesInfo = components['schemas']['SeriesOut'];
 export type Episode = components['schemas']['ItemOut'];
 export type NewWord = components['schemas']['NewWordOut'];
+export type NextItem = components['schemas']['NextOut'];
 export type Sense = components['schemas']['SenseOut'];
 
 // fetch is looked up per call (not captured at import), so tests can stub globalThis.fetch
@@ -71,4 +72,8 @@ export async function seriesEpisodes(key: string): Promise<Episode[]> {
 
 export async function episodeWords(id: number, limit = 30): Promise<NewWord[]> {
   return unwrap(await api.GET('/api/library/items/{item_id}/words', { params: { path: { item_id: id }, query: { limit } } }));
+}
+
+export async function nextUp(limit = 5): Promise<NextItem[]> {
+  return unwrap(await api.GET('/api/library/next', { params: { query: { limit } } }));
 }

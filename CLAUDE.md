@@ -39,6 +39,15 @@ Migaku / Kimchi Reader. Korean first; the architecture is multilingual (language
 - Server rules (same as kr-miner/yt-shelf): only `/srv/language-maxxer` + this container; announce changes; no sudo.
 - GitHub: `joostderuijter/language-maxxxer` (private; note the three x's), CI = .github/workflows/ci.yml.
 
+## Done since (2026-11-25, later)
+- Library list from a per-user stats cache (ADR-5 option A: triggers on word_knowledge -> stats_dirty -> StatsWorker),
+  show names cleaned/merged (series_key), index on occurrences.word_id. Library list 6 s -> 0.06 s.
+- Next up (step 5, ADR-13): `recommend.py` + `/api/library/next` + NextUp on the landing page; watch status from
+  Jellyfin (read-only, cached 60 s via util.cached_for).
+- Agreed next (user, 2026-11-25): YouTube discovery via yt-dlp (channels you have + added ones; subtitles only, no
+  video; auto-generated subs allowed as a rough estimate, badge), download through yt-shelf's API (optional setting).
+  Then a player v1 (YouTube embed: exact time + pause -> interactive subtitles, popup dictionary, cards). Then Whisper.
+
 ## Where we paused (2026-11-25)
 - Library live; first ingestion was running on the server (~1,977 Korean episodes from Jellyfin; 261 without Korean
   subtitles = shows kr-miner transcribed with its own Whisper, which language-maxxer can't see by design).

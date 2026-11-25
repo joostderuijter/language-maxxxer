@@ -10,6 +10,7 @@ services:
       TZ: ${TZ:-Europe/Amsterdam}
       LMX_DATA_DIR: /data
       LMX_JELLYFIN_URL: http://jellyfin:8096
+      LMX_JELLYFIN_PUBLIC_URL: https://tv.joost.im   # for "Open in Jellyfin" links
     volumes:
       - ./data:/data
       # media at the same paths Jellyfin sees them, READ-ONLY: language-maxxer never changes your library

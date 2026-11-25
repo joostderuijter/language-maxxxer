@@ -67,3 +67,30 @@ def test_client_asks_for_episodes_with_streams() -> None:
 
 def test_client_without_params() -> None:
     assert Jellyfin('http://j', 'k', lambda url: url).get('/System/Info') == 'http://j/System/Info'
+
+
+def test_watch_states_for_the_admin_user() -> None:
+    from lmx.content.jellyfin import WatchState
+
+    users = [
+        {'Id': 'u1', 'Name': 'guest', 'Policy': {}},
+        {'Id': 'u2', 'Name': 'root', 'Policy': {'IsAdministrator': True}},
+    ]
+    calls: list[str] = []
+
+    def fetch(url: str) -> Any:
+        calls.append(url)
+        if url.endswith('/Users'):
+            return users
+        if 'IsPlayed' in url:
+            return {'Items': [{'Id': 'a', 'UserData': {'Played': True, 'LastPlayedDate': '2026-09-17T20:05:37Z'}}]}
+        return {'Items': [{'Id': 'b', 'UserData': {'Played': False, 'PlayedPercentage': 34.3}}]}
+
+    j = Jellyfin('http://j', 'k', fetch)
+    assert j.watch_states() == {'a': WatchState(True, 0.0, '2026-09-17T20:05:37Z'), 'b': WatchState(False, 34.3, None)}
+    assert all('/Users/u2/Items' in c for c in calls[1:])
+    assert j.watch_states('guest') and '/Users/u1/Items' in calls[-1]
+
+
+def test_watch_states_without_users() -> None:
+    assert Jellyfin('http://j', 'k', lambda url: []).watch_states() == {}

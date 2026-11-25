@@ -10,6 +10,7 @@ from ..content import cache
 from ..content.library import Ingest
 from ..content.store import ItemStats, new_words, stats
 from ..models import ContentItem
+from ..recommend import Candidate, recommend
 from ..users import default_user_id
 from .deps import Db
 
@@ -155,4 +156,50 @@ def item_words(item_id: int, s: Db, limit: Annotated[int, Query(ge=1, le=500)] =
     return [
         NewWordOut(key=w.key, lemmas=list(w.lemmas), count=w.count, state=w.state)
         for w in new_words(s, default_user_id(s), item_id, limit)
+    ]
+
+
+class NextOut(BaseModel):
+    id: int
+    series: str
+    series_key: str
+    season: int | None
+    episode: int | None
+    title: str
+    coverage: float
+    new_words: int
+    one_new: int
+    score: float
+    reasons: list[str]
+    open_url: str | None  # where to watch it (Jellyfin), if LMX_JELLYFIN_PUBLIC_URL is set
+
+
+@router.get('/next', response_model=list[NextOut])
+def next_up(request: Request, s: Db, limit: Annotated[int, Query(ge=1, le=50)] = 5) -> list[NextOut]:
+    """What to watch next (ADR-13): analysed, unwatched episodes closest to your level, with the reasons."""
+    st = cache.cached(s, default_user_id(s))
+    items = s.scalars(select(ContentItem).where(ContentItem.status == 'analyzed', ContentItem.id.in_(list(st)))).all()
+    cands = [
+        Candidate(i.id, i.external_id, i.series_key or i.series, i.series, i.season, i.episode, i.title, st[i.id])
+        for i in items
+    ]
+    watch = request.app.state.watch()
+    public = request.app.state.settings.jellyfin_public_url.rstrip('/')
+    return [
+        NextOut(
+            id=c.item_id,
+            series=c.series,
+            series_key=c.series_key,
+            season=c.season,
+            episode=c.episode,
+            title=c.title,
+            coverage=c.stats.coverage,
+            new_words=c.stats.new_words,
+            one_new=c.stats.one_new,
+            score=r.score,
+            reasons=list(r.reasons),
+            open_url=f'{public}/web/#/details?id={c.external_id}' if public else None,
+        )
+        for r in recommend(cands, watch, limit)
+        for c in [r.candidate]
     ]

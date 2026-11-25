@@ -60,6 +60,30 @@ def parse_episodes(items: list[dict[str, Any]]) -> list[Episode]:
     return out
 
 
+@dataclass(frozen=True)
+class WatchState:
+    played: bool
+    pct: float  # 0-100, how far into a half-watched episode
+    last_played: str | None  # ISO timestamp
+
+
+def parse_watch(items: list[dict[str, Any]]) -> dict[str, WatchState]:
+    out: dict[str, WatchState] = {}
+    for it in items:
+        ud = it.get('UserData') or {}
+        out[it['Id']] = WatchState(
+            bool(ud.get('Played')), float(ud.get('PlayedPercentage') or 0.0), ud.get('LastPlayedDate')
+        )
+    return out
+
+
+def pick_user(users: list[dict[str, Any]], name: str = '') -> dict[str, Any] | None:
+    """The named user, else the first administrator, else the first user."""
+    by_name = next((u for u in users if name and u.get('Name') == name), None)
+    admin = next((u for u in users if (u.get('Policy') or {}).get('IsAdministrator')), None)
+    return by_name or admin or (users[0] if users else None)
+
+
 class Jellyfin:
     def __init__(self, url: str, api_key: str, fetch: Fetch | None = None):
         self.url, self.key = url.rstrip('/'), api_key
@@ -82,3 +106,21 @@ class Jellyfin:
             EnableImages='false',
         )
         return parse_episodes(data.get('Items') or [])
+
+    def watch_states(self, user: str = '') -> dict[str, WatchState]:
+        """Watched and half-watched episodes of one Jellyfin user (read-only)."""
+        u = pick_user(self.get('/Users') or [], user)
+        if u is None:
+            return {}
+        out: dict[str, WatchState] = {}
+        for flt in ('IsPlayed', 'IsResumable'):
+            data = self.get(
+                f'/Users/{u["Id"]}/Items',
+                IncludeItemTypes='Episode',
+                Recursive='true',
+                Filters=flt,
+                Fields='UserData',
+                EnableImages='false',
+            )
+            out.update(parse_watch(data.get('Items') or []))
+        return out

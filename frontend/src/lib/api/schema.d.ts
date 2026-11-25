@@ -95,6 +95,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/library/next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Next Up
+         * @description What to watch next (ADR-13): analysed, unwatched episodes closest to your level, with the reasons.
+         */
+        get: operations["next_up_api_library_next_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -399,6 +419,33 @@ export interface components {
             /** State */
             state: string;
         };
+        /** NextOut */
+        NextOut: {
+            /** Id */
+            id: number;
+            /** Series */
+            series: string;
+            /** Series Key */
+            series_key: string;
+            /** Season */
+            season: number | null;
+            /** Episode */
+            episode: number | null;
+            /** Title */
+            title: string;
+            /** Coverage */
+            coverage: number;
+            /** New Words */
+            new_words: number;
+            /** One New */
+            one_new: number;
+            /** Score */
+            score: number;
+            /** Reasons */
+            reasons: string[];
+            /** Open Url */
+            open_url: string | null;
+        };
         /** Progress */
         Progress: {
             /** Language */
@@ -603,6 +650,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NewWordOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    next_up_api_library_next_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NextOut"][];
                 };
             };
             /** @description Validation Error */
