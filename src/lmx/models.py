@@ -124,3 +124,5 @@ class ContentOccurrence(Base):
     __tablename__ = 'content_occurrences'
     sentence_id: Mapped[int] = mapped_column(ForeignKey('content_sentences.id', ondelete='CASCADE'), primary_key=True)
     word_id: Mapped[int] = mapped_column(ForeignKey('content_words.id', ondelete='CASCADE'), primary_key=True)
+
+    __table_args__ = (Index('ix_occurrences_word', 'word_id'),)
