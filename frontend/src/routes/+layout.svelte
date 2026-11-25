@@ -10,11 +10,11 @@
 
 <style>
   :global(:root) {
-    --bg: #f7f6f3; --card: #ffffff; --box: #ecebe7; --text: #1c1c1e; --muted: #6b6b70; --accent: #e5533d;
+    --bg: #f7f6f3; --card: #ffffff; --box: #ecebe7; --text: #1c1c1e; --muted: #6b6b70; --accent: #e5533d; --learning: #d99a00; --t1: rgba(46, 158, 91, 0.16);
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
-    :global(:root) { --bg: #1c1c1e; --card: #2b2b2d; --box: #3a3a3c; --text: #f0f0f0; --muted: #a0a0a5; color-scheme: dark; }
+    :global(:root) { --bg: #1c1c1e; --card: #2b2b2d; --box: #3a3a3c; --text: #f0f0f0; --muted: #a0a0a5; --learning: #f2c12e; --t1: rgba(46, 158, 91, 0.28); color-scheme: dark; }
   }
   :global(body) {
     margin: 0; background: var(--bg); color: var(--text);

@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import languages
+from .. import comprehension, languages
 from ..config import Settings
 from ..db import Database, migrate
 from ..knowledge import importer, service
@@ -115,7 +115,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     lemma=best,
                 )
             )
-        return schemas.AnalyzeResponse(language=lang, tokens=out)
+        sents = comprehension.analyse(body.text, [(t, o.state) for t, o in zip(tokens, out, strict=True)])
+        return schemas.AnalyzeResponse(
+            language=lang,
+            tokens=out,
+            sentences=[schemas.SentenceOut(start=x.start, end=x.end, unknown=len(x.unknown)) for x in sents],
+        )
 
     @app.post('/api/knowledge/events', response_model=schemas.WordStatus)
     def add_event(body: schemas.EventRequest, s: Db) -> schemas.WordStatus:

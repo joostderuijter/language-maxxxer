@@ -66,9 +66,16 @@ class AnalyzedToken(BaseModel):
     lemma: str  # the candidate lemma that state belongs to
 
 
+class SentenceOut(BaseModel):
+    start: int
+    end: int
+    unknown: int  # number of different words in it the user doesn't know yet (1 = a "1T" sentence)
+
+
 class AnalyzeResponse(BaseModel):
     language: str
     tokens: list[AnalyzedToken]
+    sentences: list[SentenceOut]
 
 
 class EventRequest(BaseModel):

@@ -289,12 +289,20 @@
             },
             "type": "array",
             "title": "Tokens"
+          },
+          "sentences": {
+            "items": {
+              "$ref": "#/components/schemas/SentenceOut"
+            },
+            "type": "array",
+            "title": "Sentences"
           }
         },
         "type": "object",
         "required": [
           "language",
-          "tokens"
+          "tokens",
+          "sentences"
         ],
         "title": "AnalyzeResponse"
       },
@@ -635,6 +643,29 @@
           "examples"
         ],
         "title": "SenseOut"
+      },
+      "SentenceOut": {
+        "properties": {
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "unknown": {
+            "type": "integer",
+            "title": "Unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "unknown"
+        ],
+        "title": "SentenceOut"
       },
       "ValidationError": {
         "properties": {

@@ -54,6 +54,8 @@ quote-style = "single"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+# full-width CJK punctuation and typographic quotes are intentional (sentence splitting)
+allowed-confusables = ["？", "！", "’", "‘", "”", "“", "。"]
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]

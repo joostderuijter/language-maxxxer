@@ -146,6 +146,8 @@ export interface components {
             language: string;
             /** Tokens */
             tokens: components["schemas"]["AnalyzedToken"][];
+            /** Sentences */
+            sentences: components["schemas"]["SentenceOut"][];
         };
         /** AnalyzedToken */
         AnalyzedToken: {
@@ -278,6 +280,15 @@ export interface components {
             pronunciation: string;
             /** Examples */
             examples: string[];
+        };
+        /** SentenceOut */
+        SentenceOut: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Unknown */
+            unknown: number;
         };
         /** ValidationError */
         ValidationError: {

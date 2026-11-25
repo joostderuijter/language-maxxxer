@@ -8,6 +8,8 @@ export type WordState = components['schemas']['WordState'];
 export type EventKind = components['schemas']['EventKind'];
 export type ImportResult = components['schemas']['ImportResult'];
 export type Lookup = components['schemas']['LookupResponse'];
+export type Analysis = components['schemas']['AnalyzeResponse'];
+export type SentenceInfo = components['schemas']['SentenceOut'];
 export type Sense = components['schemas']['SenseOut'];
 
 // fetch is looked up per call (not captured at import), so tests can stub globalThis.fetch
@@ -30,8 +32,8 @@ export async function getProgress(code: string): Promise<Progress> {
   return unwrap(await api.GET('/api/progress/{code}', { params: { path: { code } } }));
 }
 
-export async function analyze(language: string, text: string): Promise<AnalyzedToken[]> {
-  return unwrap(await api.POST('/api/analyze', { body: { language, text } })).tokens;
+export async function analyze(language: string, text: string): Promise<Analysis> {
+  return unwrap(await api.POST('/api/analyze', { body: { language, text } }));
 }
 
 export async function markWord(language: string, lemma: string, kind: EventKind): Promise<WordState> {

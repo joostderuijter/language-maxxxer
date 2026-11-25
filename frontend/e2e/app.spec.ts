@@ -66,3 +66,19 @@ test('clicking a word shows its meaning from the dictionary', async ({ page }) =
   await expect(panel).toContainText('weather'); // needs the real dictionary (built into the image)
   await expect(page.getByRole('contentinfo')).toContainText('CC BY-SA');
 });
+
+test('a sentence with exactly one new word is highlighted', async ({ page }) => {
+  await page.goto('/');
+  // make sure every word except 하늘 is known (idempotent: importing known words twice is fine)
+  await page.getByLabel(/Import a word list/).fill('오늘,known\n맑다,known');
+  await page.getByRole('button', { name: 'Import' }).click();
+  await expect(page.getByRole('status')).toContainText('Imported');
+  await page.getByLabel('Paste some Korean').fill('오늘은 하늘이 맑네요.');
+  await page.getByRole('button', { name: 'Analyse' }).click();
+  const word = page.getByTestId('analysed').getByRole('button', { name: '하늘이' });
+  await expect(word).toBeVisible();
+  if (!(await word.getAttribute('class'))?.includes('known')) {
+    await expect(word.locator('xpath=ancestor::span[contains(@class, "sentence")]')).toHaveClass(/t1/);
+  }
+  await expect(page.getByTestId('legend')).toContainText('sentences');
+});

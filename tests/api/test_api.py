@@ -119,3 +119,14 @@ def test_serves_frontend_with_spa_fallback(tmp_path: Path) -> None:
 
 def test_no_frontend_means_api_only(client: TestClient) -> None:
     assert client.get('/').status_code == 404
+
+
+def test_analyze_marks_one_unknown_word_sentences(client: TestClient) -> None:
+    client.post('/api/knowledge/import', json={'language': 'ko', 'csv': '먹다,known\n밥,known\n좋다,known'})
+    text = '밥을 먹었다. 소나기가 좋다. 소나기가 쏟아졌다.'
+    r = client.post('/api/analyze', json={'language': 'ko', 'text': text}).json()
+    assert [(text[s['start'] : s['end']], s['unknown']) for s in r['sentences']] == [
+        ('밥을 먹었다.', 0),
+        ('소나기가 좋다.', 1),  # one word not known: 1T
+        ('소나기가 쏟아졌다.', 2),
+    ]
