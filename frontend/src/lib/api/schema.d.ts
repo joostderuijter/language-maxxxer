@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+    "/api/library/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_api_library_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync Now */
+        post: operations["sync_now_api_library_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Series */
+        get: operations["series_api_library_series_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/series/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Series Items */
+        get: operations["series_items_api_library_series__name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/items/{item_id}/words": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Item Words */
+        get: operations["item_words_api_library_items__item_id__words_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -229,6 +314,33 @@ export interface components {
             /** Skipped */
             skipped: number;
         };
+        /** ItemOut */
+        ItemOut: {
+            /** Id */
+            id: number;
+            /** Series */
+            series: string;
+            /** Season */
+            season: number | null;
+            /** Episode */
+            episode: number | null;
+            /** Title */
+            title: string;
+            /** Status */
+            status: string;
+            /** Subtitle */
+            subtitle: string | null;
+            /** Duration S */
+            duration_s: number | null;
+            /** Coverage */
+            coverage: number | null;
+            /** New Words */
+            new_words: number;
+            /** One New */
+            one_new: number;
+            /** Sentences */
+            sentences: number;
+        };
         /** Language */
         Language: {
             /** Code */
@@ -240,6 +352,25 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** LibraryStatus */
+        LibraryStatus: {
+            /** Enabled */
+            enabled: boolean;
+            /** Running */
+            running: boolean;
+            /** Last Sync */
+            last_sync: number | null;
+            /** Analysed */
+            analysed: number;
+            /** Current */
+            current: string | null;
+            /** Error */
+            error: string | null;
+            /** Items */
+            items: {
+                [key: string]: number;
+            };
+        };
         /** LookupResponse */
         LookupResponse: {
             /** Lemma */
@@ -248,6 +379,17 @@ export interface components {
             senses: components["schemas"]["SenseOut"][];
             /** Idioms */
             idioms: components["schemas"]["IdiomOut"][];
+        };
+        /** NewWordOut */
+        NewWordOut: {
+            /** Key */
+            key: string;
+            /** Lemmas */
+            lemmas: string[];
+            /** Count */
+            count: number;
+            /** State */
+            state: string;
         };
         /** Progress */
         Progress: {
@@ -290,6 +432,19 @@ export interface components {
             /** Unknown */
             unknown: number;
         };
+        /** SeriesOut */
+        SeriesOut: {
+            /** Series */
+            series: string;
+            /** Items */
+            items: number;
+            /** Analyzed */
+            analyzed: number;
+            /** Coverage */
+            coverage: number | null;
+            /** One New */
+            one_new: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -325,6 +480,132 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    status_api_library_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryStatus"];
+                };
+            };
+        };
+    };
+    sync_now_api_library_sync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    series_api_library_series_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeriesOut"][];
+                };
+            };
+        };
+    };
+    series_items_api_library_series__name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    item_words_api_library_items__item_id__words_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewWordOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_health_get: {
         parameters: {
             query?: never;

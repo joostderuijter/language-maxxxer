@@ -1,40 +1,41 @@
 """The web app: JSON API under /api, the built frontend (SvelteKit, static) for everything else."""
 
-from collections.abc import Iterator
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
 from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from .. import comprehension, languages
 from ..config import Settings
+from ..content.jellyfin import Episode, Jellyfin
+from ..content.library import Finder, Ingest
+from ..content.subtitles import korean_subtitles
 from ..db import Database, migrate
 from ..knowledge import importer, service
 from ..knowledge.events import WordState
 from ..models import WordKnowledge
 from ..users import default_user_id
 from . import schemas
+from .deps import Db
+from .library import router as library_router
 
 # a word counts as the best-known of its candidate lemmas
 RANK = {WordState.IGNORED: 5, WordState.KNOWN: 4, WordState.LEARNING: 3, WordState.SEEN: 2, WordState.UNKNOWN: 1}
 
 
-def get_session(request: Request) -> Iterator[Session]:
-    """One database session per request: committed when the request succeeds, rolled back on an error."""
-    db: Database = request.app.state.db
-    with db.session() as s:
-        yield s
-
-
-Db = Annotated[Session, Depends(get_session)]
-
-
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    episodes: Callable[[], list[Episode]] | None = None,
+    find: Finder | None = None,
+) -> FastAPI:
+    """episodes / find replace Jellyfin and the subtitle finder (tests)."""
     settings = settings or Settings()
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     migrate(settings.db_url)
@@ -42,8 +43,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     with db.session() as s:
         default_user_id(s)
 
-    app = FastAPI(title='language-maxxer', version=version('language-maxxer'))
+    if episodes is None and settings.jellyfin_api_key:
+        episodes = Jellyfin(settings.jellyfin_url, settings.jellyfin_api_key).episodes
+    ingest = None
+    if episodes is not None:
+        lang = settings.library_language
+        ingest = Ingest(db, episodes, languages.get(lang), lang, settings.library_interval_s, find or korean_subtitles)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
+        if ingest is not None and settings.library_autostart:
+            ingest.start()
+        yield
+
+    app = FastAPI(title='language-maxxer', version=version('language-maxxer'), lifespan=lifespan)
     app.state.db = db
+    app.state.ingest = ingest
+    app.include_router(library_router)
 
     def language(code: str) -> str:
         if code not in languages.available():

@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     database_url: str = ''  # default: sqlite file in data_dir
     static_dir: Path | None = None  # built frontend; None = API only (dev, tests)
     dict_dir: Path = Path('dicts')  # dictionaries built into the image (ADR-12), e.g. ko-krdict.sqlite
+    jellyfin_url: str = 'http://jellyfin:8096'
+    jellyfin_api_key: str = ''  # read-only use; empty = no library
+    library_language: str = 'ko'  # the language Jellyfin's content is analysed as
+    library_interval_s: float = 3600  # how often to sync with Jellyfin (plus on demand)
+    library_autostart: bool = True  # start the background worker (tests turn it off)
 
     @property
     def db_url(self) -> str:

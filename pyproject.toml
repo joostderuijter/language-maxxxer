@@ -33,7 +33,8 @@ packages = ["src/lmx"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
-filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
+# every warning is a test failure (deprecations get fixed, not ignored), except known third-party noise
+filterwarnings = ["error", "ignore:Using `httpx` with `starlette.testclient`"]
 
 [tool.coverage.run]
 source = ["src/lmx"]
