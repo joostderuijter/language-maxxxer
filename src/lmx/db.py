@@ -15,7 +15,9 @@ class Base(DeclarativeBase):
 
 
 def make_engine(url: str) -> Engine:
-    engine = create_engine(url, connect_args={'check_same_thread': False} if url.startswith('sqlite') else {})
+    # SQLite: shared across threads (sessions are per request/job); wait up to 30 s for another writer
+    sqlite_args = {'check_same_thread': False, 'timeout': 30}
+    engine = create_engine(url, connect_args=sqlite_args if url.startswith('sqlite') else {})
     if url.startswith('sqlite'):
 
         @event.listens_for(engine, 'connect')

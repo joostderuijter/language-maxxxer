@@ -48,6 +48,7 @@
     "/api/library/series": {
       "get": {
         "summary": "Series",
+        "description": "All shows, from the stats cache (instant; may lag a moment behind a knowledge change).",
         "operationId": "series_api_library_series_get",
         "responses": {
           "200": {
@@ -67,18 +68,19 @@
         }
       }
     },
-    "/api/library/series/{name}": {
+    "/api/library/series/{key}": {
       "get": {
         "summary": "Series Items",
-        "operationId": "series_items_api_library_series__name__get",
+        "description": "One show's episodes with LIVE stats (fast per show).",
+        "operationId": "series_items_api_library_series__key__get",
         "parameters": [
           {
-            "name": "name",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Name"
+              "title": "Key"
             }
           }
         ],
@@ -92,7 +94,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ItemOut"
                   },
-                  "title": "Response Series Items Api Library Series  Name  Get"
+                  "title": "Response Series Items Api Library Series  Key  Get"
                 }
               }
             }
@@ -849,6 +851,10 @@
             },
             "type": "object",
             "title": "Items"
+          },
+          "stats_pending": {
+            "type": "integer",
+            "title": "Stats Pending"
           }
         },
         "type": "object",
@@ -859,7 +865,8 @@
           "analysed",
           "current",
           "error",
-          "items"
+          "items",
+          "stats_pending"
         ],
         "title": "LibraryStatus"
       },
@@ -1030,6 +1037,10 @@
       },
       "SeriesOut": {
         "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
           "series": {
             "type": "string",
             "title": "Series"
@@ -1060,6 +1071,7 @@
         },
         "type": "object",
         "required": [
+          "key",
           "series",
           "items",
           "analyzed",

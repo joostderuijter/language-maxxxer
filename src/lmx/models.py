@@ -63,7 +63,8 @@ class ContentItem(Base):
     language: Mapped[str] = mapped_column(String(8))
     source: Mapped[str] = mapped_column(String(16))  # jellyfin | folder
     external_id: Mapped[str] = mapped_column(String(500))  # Jellyfin item id, or the path relative to the folder
-    series: Mapped[str] = mapped_column(String(300))
+    series: Mapped[str] = mapped_column(String(300))  # cleaned display name (content.names.clean_series)
+    series_key: Mapped[str] = mapped_column(String(300), default='')  # groups release folders of one show
     season: Mapped[int | None] = mapped_column(Integer)
     episode: Mapped[int | None] = mapped_column(Integer)
     title: Mapped[str] = mapped_column(String(500))
@@ -78,7 +79,10 @@ class ContentItem(Base):
     analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
-    __table_args__ = (UniqueConstraint('source', 'external_id', name='uq_content_source_external'),)
+    __table_args__ = (
+        UniqueConstraint('source', 'external_id', name='uq_content_source_external'),
+        Index('ix_content_series_key', 'series_key'),
+    )
 
 
 class ContentSentence(Base):
@@ -126,3 +130,29 @@ class ContentOccurrence(Base):
     word_id: Mapped[int] = mapped_column(ForeignKey('content_words.id', ondelete='CASCADE'), primary_key=True)
 
     __table_args__ = (Index('ix_occurrences_word', 'word_id'),)
+
+
+# ---------------------------------------------------------------------------- per-user stats cache (ADR-5, option A)
+
+
+class ItemStatsCache(Base):
+    """Cached content.store.stats() per user and item, for library-wide views. Kept fresh by stats_dirty."""
+
+    __tablename__ = 'item_stats'
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    item_id: Mapped[int] = mapped_column(ForeignKey('content_items.id', ondelete='CASCADE'), primary_key=True)
+    sentences: Mapped[int] = mapped_column(Integer)
+    words_total: Mapped[int] = mapped_column(Integer)
+    words_known: Mapped[int] = mapped_column(Integer)
+    new_words: Mapped[int] = mapped_column(Integer)
+    one_new: Mapped[int] = mapped_column(Integer)
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class StatsDirty(Base):
+    """(user, item) pairs whose cached stats must be recomputed. Filled by triggers on word_knowledge (migration
+    0004) and by save_analysis; emptied by content.cache.refresh()."""
+
+    __tablename__ = 'stats_dirty'
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    item_id: Mapped[int] = mapped_column(ForeignKey('content_items.id', ondelete='CASCADE'), primary_key=True)

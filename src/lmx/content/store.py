@@ -8,11 +8,20 @@ Here a sentence is a subtitle line (one cue), as kr-miner did.
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, insert, literal, select, text
 from sqlalchemy.orm import Session
 
 from ..languages.base import Token
-from ..models import ContentItem, ContentOccurrence, ContentSentence, ContentWord, ContentWordLemma, now
+from ..models import (
+    ContentItem,
+    ContentOccurrence,
+    ContentSentence,
+    ContentWord,
+    ContentWordLemma,
+    StatsDirty,
+    User,
+    now,
+)
 
 
 @dataclass(frozen=True)
@@ -85,6 +94,16 @@ def save_analysis(
     )
     item.status, item.analyzer, item.analyzed_at, item.detail = 'analyzed', analyzer, now(), None
     session.flush()
+    mark_item(session, item.id)
+
+
+def mark_item(session: Session, item_id: int) -> None:
+    """An item's analysis or status changed: every user's cached stats for it are stale (see content.cache)."""
+    session.execute(
+        insert(StatsDirty)
+        .from_select(['user_id', 'item_id'], select(User.id, literal(item_id)))
+        .prefix_with('OR IGNORE')
+    )
 
 
 # Best state per content word for one user: rank 5 ignored, 4 known, 3 learning, 2 seen, 1 unknown / no status.

@@ -13,7 +13,7 @@
     try {
       [status, series] = await Promise.all([libraryStatus(), librarySeries()]);
       error = '';
-      if (status.running) timer = setTimeout(refresh, 3000); // follow progress while it works
+      if (status.running || status.stats_pending) timer = setTimeout(refresh, 3000); // follow progress while it works
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
     }
@@ -43,6 +43,7 @@
     </span>
     {#if status.running}<span class="muted">working{status.current ? `: ${status.current}` : '…'}</span>
     {:else}<button type="button" onclick={sync}>Sync with Jellyfin</button>{/if}
+    {#if status.stats_pending}<span class="muted">updating coverage for {status.stats_pending} episodes…</span>{/if}
     {#if status.error}<span role="alert">{status.error}</span>{/if}
   </div>
   <SeriesTable {series} />

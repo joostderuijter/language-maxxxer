@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from .. import comprehension, languages
 from ..config import Settings
+from ..content.cache import StatsWorker
 from ..content.jellyfin import Episode, Jellyfin
 from ..content.library import Finder, Ingest
 from ..content.subtitles import korean_subtitles
@@ -43,22 +44,34 @@ def create_app(
     with db.session() as s:
         default_user_id(s)
 
+    stats_worker = StatsWorker(db)
     if episodes is None and settings.jellyfin_api_key:
         episodes = Jellyfin(settings.jellyfin_url, settings.jellyfin_api_key).episodes
     ingest = None
     if episodes is not None:
         lang = settings.library_language
-        ingest = Ingest(db, episodes, languages.get(lang), lang, settings.library_interval_s, find or korean_subtitles)
+        ingest = Ingest(
+            db,
+            episodes,
+            languages.get(lang),
+            lang,
+            settings.library_interval_s,
+            find or korean_subtitles,
+            on_change=stats_worker.poke,
+        )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
-        if ingest is not None and settings.library_autostart:
-            ingest.start()
+        if settings.library_autostart:
+            stats_worker.start()
+            if ingest is not None:
+                ingest.start()
         yield
 
     app = FastAPI(title='language-maxxer', version=version('language-maxxer'), lifespan=lifespan)
     app.state.db = db
     app.state.ingest = ingest
+    app.state.stats = stats_worker
     app.include_router(library_router)
 
     def language(code: str) -> str:
@@ -142,6 +155,7 @@ def create_app(
     def add_event(body: schemas.EventRequest, s: Db) -> schemas.WordStatus:
         lang = language(body.language)
         snap = service.record(s, default_user_id(s), lang, body.lemma, body.kind, source='app')
+        stats_worker.poke()
         return schemas.WordStatus(lemma=body.lemma.strip(), state=snap.state, confidence=snap.confidence)
 
     @app.post('/api/knowledge/import', response_model=schemas.ImportResult)
@@ -149,6 +163,7 @@ def create_app(
         lang = language(body.language)
         items, skipped = importer.parse(body.csv)
         n = service.record_many(s, default_user_id(s), lang, items, source=body.source)
+        stats_worker.poke()
         return schemas.ImportResult(imported=n, skipped=skipped)
 
     if settings.static_dir and (settings.static_dir / 'index.html').exists():

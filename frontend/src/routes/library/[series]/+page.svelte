@@ -3,13 +3,13 @@
   import { seriesEpisodes, type Episode } from '#lib/api/index.ts';
   import EpisodeList from '#lib/EpisodeList.svelte';
 
-  const name = $derived(page.params.series ?? '');
+  const key = $derived(page.params.series ?? '');
   let episodes = $state<Episode[]>([]);
   let error = $state('');
 
   async function refresh() {
     try {
-      episodes = await seriesEpisodes(name);
+      episodes = await seriesEpisodes(key);
       error = '';
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -17,13 +17,13 @@
   }
 
   $effect(() => {
-    void name;
+    void key;
     refresh();
   });
 </script>
 
 <p><a href="/library">← Library</a></p>
-<h1>{name}</h1>
+<h1>{episodes[0]?.series ?? ''}</h1>
 {#if error}<p role="alert">{error}</p>{/if}
 <EpisodeList language="ko" {episodes} onchange={refresh} />
 

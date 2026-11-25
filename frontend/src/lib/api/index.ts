@@ -65,8 +65,8 @@ export async function librarySeries(): Promise<SeriesInfo[]> {
   return unwrap(await api.GET('/api/library/series'));
 }
 
-export async function seriesEpisodes(name: string): Promise<Episode[]> {
-  return unwrap(await api.GET('/api/library/series/{name}', { params: { path: { name } } }));
+export async function seriesEpisodes(key: string): Promise<Episode[]> {
+  return unwrap(await api.GET('/api/library/series/{key}', { params: { path: { key } } }));
 }
 
 export async function episodeWords(id: number, limit = 30): Promise<NewWord[]> {

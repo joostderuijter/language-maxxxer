@@ -14,7 +14,8 @@ from ..db import Database
 from ..languages.base import LanguagePack
 from ..models import ContentItem, now
 from .jellyfin import Episode
-from .store import Line, save_analysis
+from .names import clean_series, show_key
+from .store import Line, mark_item, save_analysis
 from .subtitles import korean_subtitles
 
 SOURCE = 'jellyfin'
@@ -30,47 +31,33 @@ class SyncResult:
 
 def sync(session: Session, episodes: list[Episode], language: str) -> SyncResult:
     """Make content_items match Jellyfin's Korean episodes. Changed files, and episodes that gained Korean subtitles,
-    are analysed again; earlier errors are retried."""
+    are analysed again; earlier errors are retried. Show names are cleaned (release folders of one show merge)."""
     have = {i.external_id: i for i in session.scalars(select(ContentItem).where(ContentItem.source == SOURCE))}
     added = updated = 0
     seen: set[str] = set()
     for ep in episodes:
         seen.add(ep.id)
+        meta = {
+            'series': clean_series(ep.series),
+            'series_key': show_key(ep.series),
+            'season': ep.season,
+            'episode': ep.episode,
+            'title': ep.title,
+            'duration_s': ep.duration_s,
+        }
         it = have.get(ep.id)
         if it is None:
             session.add(
-                ContentItem(
-                    language=language,
-                    source=SOURCE,
-                    external_id=ep.id,
-                    series=ep.series,
-                    season=ep.season,
-                    episode=ep.episode,
-                    title=ep.title,
-                    path=ep.path,
-                    duration_s=ep.duration_s,
-                    status='new',
-                )
+                ContentItem(language=language, source=SOURCE, external_id=ep.id, path=ep.path, status='new', **meta)
             )
             added += 1
             continue
         retry = it.path != ep.path or it.status == 'error' or (it.status == 'no_subtitles' and ep.korean_subs)
-        changed = (it.series, it.season, it.episode, it.title, it.duration_s) != (
-            ep.series,
-            ep.season,
-            ep.episode,
-            ep.title,
-            ep.duration_s,
-        )
+        changed = any(getattr(it, k) != v for k, v in meta.items())
         if retry or changed:
-            it.series, it.season, it.episode, it.title, it.path, it.duration_s = (
-                ep.series,
-                ep.season,
-                ep.episode,
-                ep.title,
-                ep.path,
-                ep.duration_s,
-            )
+            for k, v in meta.items():
+                setattr(it, k, v)
+            it.path = ep.path
             if retry:
                 it.status = 'new'
             it.updated_at = now()
@@ -84,9 +71,10 @@ def sync(session: Session, episodes: list[Episode], language: str) -> SyncResult
 
 def pending(session: Session, version: str, limit: int = 100) -> list[int]:
     """Items to analyse: new ones, and analysed ones whose analysis is from another pack version."""
+    outdated = (ContentItem.status == 'analyzed') & (ContentItem.analyzer != version)
     q = (
         select(ContentItem.id)
-        .where(or_(ContentItem.status == 'new', (ContentItem.status == 'analyzed') & (ContentItem.analyzer != version)))
+        .where(or_(ContentItem.status == 'new', outdated))
         .order_by(ContentItem.series, ContentItem.season, ContentItem.episode, ContentItem.id)
         .limit(limit)
     )
@@ -94,19 +82,20 @@ def pending(session: Session, version: str, limit: int = 100) -> list[int]:
 
 
 def analyze(session: Session, item: ContentItem, pack: LanguagePack, find: Finder = korean_subtitles) -> None:
-    """Subtitles -> analysis. Sets status analyzed / no_subtitles / error."""
+    """Subtitles -> analysis. Sets status analyzed / no_subtitles / error, and marks the item's cached stats stale."""
     try:
         found = find(Path(item.path))
     except Exception as e:  # ffmpeg failed, file unreadable, ...
         item.status, item.detail, item.updated_at = 'error', f'{type(e).__name__}: {e}'[:500], now()
-        return
-    if found is None:
-        item.status, item.subtitle, item.analyzer, item.detail = 'no_subtitles', None, pack.version, None
-        item.updated_at = now()
-        return
-    where, lines = found
-    item.subtitle = where
-    save_analysis(session, item, lines, pack.analyze_many([ln.text for ln in lines]), pack.version)
+    else:
+        if found is None:
+            item.status, item.subtitle, item.analyzer, item.detail = 'no_subtitles', None, pack.version, None
+            item.updated_at = now()
+        else:
+            item.subtitle = found[0]
+            save_analysis(session, item, found[1], pack.analyze_many([ln.text for ln in found[1]]), pack.version)
+    session.flush()
+    mark_item(session, item.id)
 
 
 @dataclass
@@ -131,9 +120,11 @@ class Ingest:
         language: str,
         interval_s: float = 3600,
         find: Finder = korean_subtitles,
+        on_change: Callable[[], None] = lambda: None,
     ):
+        """on_change: called after every analysed item (e.g. to wake the stats cache worker)."""
         self.db, self.episodes, self.pack, self.language = db, episodes, pack, language
-        self.interval_s, self.find = interval_s, find
+        self.interval_s, self.find, self.on_change = interval_s, find, on_change
         self.state = IngestState()
         self._wake = threading.Event()
         self._lock = threading.Lock()
@@ -155,6 +146,7 @@ class Ingest:
                         self.state.current = f'{item.series} {item.title}'
                         analyze(s, item, self.pack, self.find)
                     self.state.analysed += 1
+                    self.on_change()
             except Exception as e:
                 self.state.error = f'{type(e).__name__}: {e}'
                 self.state.log = [*self.state.log, traceback.format_exc()][-5:]

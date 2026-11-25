@@ -45,7 +45,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Series */
+        /**
+         * Series
+         * @description All shows, from the stats cache (instant; may lag a moment behind a knowledge change).
+         */
         get: operations["series_api_library_series_get"];
         put?: never;
         post?: never;
@@ -55,15 +58,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/library/series/{name}": {
+    "/api/library/series/{key}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Series Items */
-        get: operations["series_items_api_library_series__name__get"];
+        /**
+         * Series Items
+         * @description One show's episodes with LIVE stats (fast per show).
+         */
+        get: operations["series_items_api_library_series__key__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -370,6 +376,8 @@ export interface components {
             items: {
                 [key: string]: number;
             };
+            /** Stats Pending */
+            stats_pending: number;
         };
         /** LookupResponse */
         LookupResponse: {
@@ -434,6 +442,8 @@ export interface components {
         };
         /** SeriesOut */
         SeriesOut: {
+            /** Key */
+            key: string;
             /** Series */
             series: string;
             /** Items */
@@ -542,12 +552,12 @@ export interface operations {
             };
         };
     };
-    series_items_api_library_series__name__get: {
+    series_items_api_library_series__key__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                name: string;
+                key: string;
             };
             cookie?: never;
         };

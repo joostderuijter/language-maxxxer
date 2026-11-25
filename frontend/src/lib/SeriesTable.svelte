@@ -9,9 +9,9 @@
   <p class="muted" data-testid="no-series">No Korean shows found yet.</p>
 {:else}
   <ul class="list" aria-label="shows">
-    {#each series as s (s.series)}
+    {#each series as s (s.key)}
       <li>
-        <a href={`/library/${encodeURIComponent(s.series)}`}>
+        <a href={`/library/${encodeURIComponent(s.key)}`}>
           <span class="name">{s.series}</span>
           <span class="muted">{s.analyzed}/{s.items} episodes analysed{s.one_new ? ` · ${s.one_new} one-new-word sentences` : ''}</span>
         </a>

@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
+from ..content import cache
 from ..content.library import Ingest
 from ..content.store import ItemStats, new_words, stats
 from ..models import ContentItem
@@ -23,9 +24,11 @@ class LibraryStatus(BaseModel):
     current: str | None
     error: str | None
     items: dict[str, int]  # per status: new | analyzed | no_subtitles | error
+    stats_pending: int  # episodes whose cached coverage is being recomputed (the library list may lag a moment)
 
 
 class SeriesOut(BaseModel):
+    key: str  # stable id of the show (release folders merged): use it in /series/{key}
     series: str
     items: int
     analyzed: int
@@ -73,6 +76,7 @@ def status(request: Request, s: Db) -> LibraryStatus:
         current=st.current if st else None,
         error=st.error if st else None,
         items={k: counts.get(k, 0) for k in ('new', 'analyzed', 'no_subtitles', 'error')},
+        stats_pending=cache.pending(s, default_user_id(s)),
     )
 
 
@@ -104,37 +108,42 @@ def _item_out(it: ContentItem, x: ItemStats) -> ItemOut:
 
 @router.get('/series', response_model=list[SeriesOut])
 def series(s: Db) -> list[SeriesOut]:
+    """All shows, from the stats cache (instant; may lag a moment behind a knowledge change)."""
     items = s.scalars(select(ContentItem)).all()
-    uid = default_user_id(s)
-    st = stats(s, uid, [i.id for i in items if i.status == 'analyzed'])
-    out: dict[str, list[ContentItem]] = {}
+    st = cache.cached(s, default_user_id(s))
+    groups: dict[str, list[ContentItem]] = {}
     for it in items:
-        out.setdefault(it.series, []).append(it)
-    result: list[SeriesOut] = []
-    for name, its in sorted(out.items(), key=lambda kv: kv[0].lower()):
-        done = [st[i.id] for i in its if i.id in st]
+        groups.setdefault(it.series_key or it.series, []).append(it)
+    out: list[SeriesOut] = []
+    for key, its in groups.items():
+        names: dict[str, int] = {}
+        for it in its:
+            names[it.series] = names.get(it.series, 0) + 1
+        done = [st[i.id] for i in its if i.status == 'analyzed' and i.id in st]
         total = sum(x.words_total for x in done)
-        result.append(
+        out.append(
             SeriesOut(
-                series=name,
+                key=key,
+                series=max(names, key=lambda n: (names[n], n)),  # the most common spelling
                 items=len(its),
-                analyzed=len(done),
+                analyzed=sum(i.status == 'analyzed' for i in its),
                 coverage=sum(x.words_known for x in done) / total if total else None,
                 one_new=sum(x.one_new for x in done),
             )
         )
-    return result
+    return sorted(out, key=lambda x: x.series.lower())
 
 
-@router.get('/series/{name}', response_model=list[ItemOut])
-def series_items(name: str, s: Db) -> list[ItemOut]:
+@router.get('/series/{key}', response_model=list[ItemOut])
+def series_items(key: str, s: Db) -> list[ItemOut]:
+    """One show's episodes with LIVE stats (fast per show)."""
     items = s.scalars(
         select(ContentItem)
-        .where(ContentItem.series == name)
+        .where(ContentItem.series_key == key)
         .order_by(ContentItem.season, ContentItem.episode, ContentItem.title)
     ).all()
     if not items:
-        raise HTTPException(404, f'no series {name!r}')
+        raise HTTPException(404, f'no show {key!r}')
     st = stats(s, default_user_id(s), [i.id for i in items])
     return [_item_out(i, st[i.id]) for i in items]
 
