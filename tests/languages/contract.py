@@ -22,6 +22,7 @@ def check_tokens(text: str, tokens: list[Token]) -> None:
 
 def check_pack(pack: LanguagePack, samples: list[str]) -> None:
     assert pack.code and pack.name
+    assert pack.version and pack.version == pack.version, 'version must be non-empty and stable'
     for text in samples:
         a = pack.analyze(text)
         check_tokens(text, a)

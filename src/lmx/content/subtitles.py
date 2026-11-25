@@ -1,7 +1,8 @@
 """Korean subtitles for a video: an embedded text track (ffprobe/ffmpeg) or a sidecar file (video.ko.srt).
 
-Preference: an embedded Korean text track (normal over SDH, never 'forced'), then a sidecar .ko/.kor/.korean .srt
-(e.g. yt-shelf's YouTube or Whisper subtitles).
+Order: a sidecar .ko/.kor/.korean .srt first (a small file; e.g. yt-shelf's YouTube or Whisper subtitles, written
+only when the video has no real ones), then an embedded Korean text track (normal over SDH, never 'forced'), which
+makes ffmpeg read through the whole video file.
 """
 
 import json
@@ -112,14 +113,14 @@ def sidecar(path: Path) -> Path | None:
 
 def korean_subtitles(path: Path) -> tuple[str, list[Line]] | None:
     """-> (where they came from, lines), or None if the video has no Korean subtitles."""
-    stream = pick_korean(probe(path)) if path.is_file() else None
-    if stream is not None:
-        lines = extract(path, stream)
-        if lines:
-            return f'stream:{stream.index}', lines
     side = sidecar(path)
     if side is not None:
         lines = parse_srt(side.read_text(encoding='utf-8', errors='replace'))
         if lines:
             return f'file:{side.name}', lines
+    stream = pick_korean(probe(path)) if path.is_file() else None
+    if stream is not None:
+        lines = extract(path, stream)
+        if lines:
+            return f'stream:{stream.index}', lines
     return None

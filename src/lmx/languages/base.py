@@ -31,6 +31,12 @@ class LanguagePack(Protocol):
     code: str  # ISO 639-1, e.g. 'ko'
     name: str  # e.g. 'Korean'
 
+    @property
+    def version(self) -> str:
+        """Changes whenever analysis results can change (rules, analyzer, dictionary). Content analysed with another
+        version is analysed again."""
+        ...
+
     def analyze(self, text: str) -> list[Token]:
         """Learnable words in `text`, in order. Must be deterministic."""
         ...

@@ -52,7 +52,11 @@ mounts; subtitles only this round, Whisper later; analysis versioned; transparen
   (save_analysis, live stats per user: coverage, new words, 1T sentences; property test = same rules as
   comprehension.py). A sentence = one subtitle line.
   Step 2 DONE: `content/subtitles.py` (parse_srt, probe/pick_korean/extract via ffprobe+ffmpeg, sidecar .ko.srt;
-  embedded track wins). ffmpeg in the image + CI. Step 3: sources (Jellyfin client, folder) +
+  sidecar first (cheap), then embedded track). ffmpeg in the image + CI.
+  Step 3 DONE: Jellyfin is the ONLY source (the yt-shelf folder is a Jellyfin library too): `content/jellyfin.py`
+  (episodes with a Korean subtitle/audio track), `content/library.py` (sync: add/update/remove, re-analyse on file
+  change / new Korean subs / errors; pending = new or analysed with another `pack.version`; analyze; Ingest worker
+  with run_once/trigger/state). LanguagePack.version (Korean: ko<RULES>-kiwi<ver>-dict<rev>). Step 3 (old text): sources (Jellyfin client, folder) +
   background ingestion + analyzer version. Step 4: API + Library page. Step 5: "next up" (ADR-13).
 Then: content library (Jellyfin + folders) with
 lemma counts + coverage + "next up", Anki import of known words, reader. Later: grammar points (curated TOPIK list,

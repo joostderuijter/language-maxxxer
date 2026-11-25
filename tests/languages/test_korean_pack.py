@@ -28,3 +28,9 @@ def test_no_dictionary_still_analyzes() -> None:
     pack = KoreanPack(None)
     assert pack.lookup('밥') == [] and pack.dictionary_info() == {}
     assert [t.lemmas for t in pack.analyze('먹었다')] == [('먹다',)]
+
+
+def test_version_changes_with_the_dictionary(test_dictionaries: Path) -> None:
+    with_dict, without = KoreanPack(test_dictionaries / 'ko-krdict.sqlite'), KoreanPack(None)
+    assert with_dict.version.startswith('ko') and 'kiwi' in with_dict.version
+    assert with_dict.version != without.version  # weak-word results depend on the dictionary

@@ -38,9 +38,21 @@ def base_tag(tag: str) -> str:
 Word = tuple[list[str], str, str, bool, tuple[str, ...]]  # lemmas, pos, key, weak, extra tags (consumed suffix)
 
 
+RULES = 2  # bump when the rules below change what analyze() returns (2: dictionary-aware weak nouns)
+
+
 class KoreanPack:
     code = 'ko'
     name = 'Korean'
+
+    @property
+    def version(self) -> str:
+        from importlib.metadata import version
+
+        meta = self.dict.meta()
+        rev = meta.get('revision') or meta.get('sha256') or (f'n{meta["senses"]}' if 'senses' in meta else 'none')
+        rev = rev[:7]
+        return f'ko{RULES}-kiwi{version("kiwipiepy")}-dict{rev}'
 
     def __init__(self, dictionary: Path | None = None) -> None:
         self.kiwi = Kiwi()

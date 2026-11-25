@@ -123,3 +123,12 @@ def test_missing_file_uses_sidecar_only(tmp_path: Path) -> None:
     (tmp_path / 'gone.ko.srt').write_text('1\n00:00:00,000 --> 00:00:00,800\n네\n', encoding='utf-8')
     assert korean_subtitles(tmp_path / 'gone.mkv') == ('file:gone.ko.srt', [Line(0, 800, '네')])
     assert korean_subtitles(tmp_path / 'nothing.mkv') is None
+
+
+@needs_ffmpeg
+def test_sidecar_wins_over_embedded_track(tmp_path: Path) -> None:
+    """Reading a sidecar is cheap; extracting a track reads the whole video. yt-shelf writes a sidecar only when the
+    video has no real Korean subtitles, so preferring it loses nothing."""
+    video = make_video(tmp_path, [('kor', '1\n00:00:00,100 --> 00:00:00,900\n임베디드\n')])
+    (tmp_path / 'video.ko.srt').write_text('1\n00:00:00,000 --> 00:00:00,800\n사이드카\n', encoding='utf-8')
+    assert korean_subtitles(video) == ('file:video.ko.srt', [Line(0, 800, '사이드카')])
