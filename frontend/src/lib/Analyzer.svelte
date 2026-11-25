@@ -1,6 +1,7 @@
 <script lang="ts">
   import { analyze, markWord, type AnalyzedToken, type EventKind } from './api';
   import { segments } from './segments';
+  import WordPanel from './WordPanel.svelte';
 
   let { language, onchange }: { language: string; onchange: () => void } = $props();
   let text = $state('');
@@ -45,12 +46,7 @@
     </p>
   {/if}
   {#if selected}
-    <div class="pick" data-testid="word-panel">
-      <b>{selected.lemma}</b> <span class="muted">{selected.pos} · {selected.state}</span>
-      <button type="button" onclick={() => mark('marked_known')}>Know</button>
-      <button type="button" onclick={() => mark('ignored')}>Ignore</button>
-      {#if selected.state !== 'unknown'}<button type="button" onclick={() => mark('marked_unknown')}>Reset</button>{/if}
-    </div>
+    <WordPanel {language} token={selected} onmark={mark} />
   {/if}
 </form>
 
@@ -62,6 +58,4 @@
   .word.learning { border-bottom: 2px dashed var(--accent); }
   .word.ignored, .word.weak.unknown { color: var(--muted); border-bottom: 0; }
   .word[aria-pressed='true'] { background: var(--box); }
-  .pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .muted { color: var(--muted); font-size: 13px; }
 </style>

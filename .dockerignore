@@ -9,3 +9,4 @@ frontend/build
 frontend/.svelte-kit
 frontend/test-results
 frontend/playwright-report
+dicts

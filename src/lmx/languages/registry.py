@@ -7,9 +7,10 @@ from .base import LanguagePack
 
 
 def _korean() -> LanguagePack:
-    from .korean import KoreanPack
+    from ..config import Settings
+    from .korean.pack import KoreanPack
 
-    return KoreanPack()
+    return KoreanPack(Settings().dict_dir / 'ko-krdict.sqlite')
 
 
 FACTORIES: dict[str, tuple[str, Callable[[], LanguagePack]]] = {

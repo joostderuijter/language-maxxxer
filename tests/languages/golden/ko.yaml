@@ -1,4 +1,5 @@
-# Golden tests for the Korean pack: sentence -> expected learnable words.
+# Golden tests for the Korean pack: sentence -> expected learnable words. Run with the fixture dictionary
+# (tests/fixtures/ko_dict_rows.txt), so "weak" depends on what that file contains.
 # Each word: surface: [lemma candidates, most specific first]; "weak" words get a trailing "(weak)".
 # Review rule: every entry was checked by a human. Known wrong behaviour goes under `known_issues` (xfail) so a fix
 # shows up as XPASS and the case moves up into `cases`.
@@ -14,12 +15,10 @@ cases:
   - text: 친구들이랑 같이 먹었어
     words: {친구들이랑: [친구], 같이: [같이], 먹었어: [먹다]}
   - text: 너무 추워서 집에 있었어요
-    words: {너무: [너무], 추워서: [춥다], 집에: [집 (weak)], 있었어요: [있다]}
+    words: {너무: [너무], 추워서: [춥다], 집에: [집], 있었어요: [있다]}   # 집 is in the dictionary: a real word
+  - text: 밥을 먹었다          # fixed 2026-11-25: one-syllable nouns count when the dictionary knows them
+    words: {밥을: [밥], 먹었다: [먹다]}
 known_issues:
   - text: 그래서 배신당했어?
     words: {그래서: [그래서], 배신당했어: [배신당하다, 배신]}
     reason: Kiwi splits 당하다 off as a separate verb; should be one passive word (needs a 당하다 derivation rule)
-  - text: 밥을 먹었다
-    words: {밥을: [밥], 먹었다: [먹다]}
-    reason: single-syllable nouns are marked weak (kr-miner rule against mis-splits); real words like 밥/물/집/돈 need
-      the dictionary to tell them apart (weak only if not in the dictionary)

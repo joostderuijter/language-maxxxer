@@ -29,3 +29,14 @@ def check_pack(pack: LanguagePack, samples: list[str]) -> None:
     assert pack.analyze_many(samples) == [pack.analyze(t) for t in samples], 'analyze_many differs from analyze'
     assert pack.analyze_many([]) == []
     assert pack.analyze('') == []
+
+
+def check_dictionary(pack: LanguagePack, known: str) -> None:
+    """`known` must be in the pack's (test) dictionary."""
+    senses = pack.lookup(known)
+    assert senses, f'{known!r} not found'
+    assert all(s.headword == known and s.pos in POS for s in senses)
+    assert all(s.gloss or s.definition or s.native for s in senses), 'a sense without any text'
+    assert pack.lookup(known) == senses, 'not deterministic'
+    assert pack.lookup('\u0000no-such-word') == [] and pack.idioms('\u0000no-such-word') == []
+    assert isinstance(pack.dictionary_info(), dict)

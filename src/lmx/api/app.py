@@ -5,7 +5,7 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
@@ -56,7 +56,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get('/api/languages', response_model=list[schemas.Language])
     def list_languages() -> list[schemas.Language]:
-        return [schemas.Language(code=c, name=n) for c, n in languages.available().items()]
+        return [
+            schemas.Language(code=c, name=n, dictionary=languages.get(c).dictionary_info())
+            for c, n in languages.available().items()
+        ]
+
+    @app.get('/api/dictionary/{code}', response_model=schemas.LookupResponse)
+    def lookup(code: str, lemma: Annotated[list[str], Query(min_length=1, max_length=10)]) -> schemas.LookupResponse:
+        """Meanings of the first candidate lemma the dictionary knows (a token's lemmas, most specific first)."""
+        pack = languages.get(language(code))
+        for cand in lemma:
+            senses = pack.lookup(cand)
+            if senses:
+                return schemas.LookupResponse(
+                    lemma=cand,
+                    senses=[schemas.SenseOut.model_validate(x, from_attributes=True) for x in senses],
+                    idioms=[schemas.IdiomOut.model_validate(i, from_attributes=True) for i in pack.idioms(cand)],
+                )
+        return schemas.LookupResponse(lemma=lemma[0], senses=[], idioms=[])
 
     @app.get('/api/progress/{code}', response_model=schemas.Progress)
     def progress(code: str, s: Db) -> schemas.Progress:

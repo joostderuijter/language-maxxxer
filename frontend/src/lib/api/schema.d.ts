@@ -38,6 +38,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dictionary/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lookup
+         * @description Meanings of the first candidate lemma the dictionary knows (a token's lemmas, most specific first).
+         */
+        get: operations["lookup_api_dictionary__code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/progress/{code}": {
         parameters: {
             query?: never;
@@ -172,6 +192,19 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** IdiomOut */
+        IdiomOut: {
+            /** Text */
+            text: string;
+            /** Kind */
+            kind: string;
+            /** Gloss */
+            gloss: string;
+            /** Definition */
+            definition: string;
+            /** Native */
+            native: string;
+        };
         /** ImportRequest */
         ImportRequest: {
             /** Language */
@@ -200,6 +233,19 @@ export interface components {
             code: string;
             /** Name */
             name: string;
+            /** Dictionary */
+            dictionary: {
+                [key: string]: string;
+            };
+        };
+        /** LookupResponse */
+        LookupResponse: {
+            /** Lemma */
+            lemma: string;
+            /** Senses */
+            senses: components["schemas"]["SenseOut"][];
+            /** Idioms */
+            idioms: components["schemas"]["IdiomOut"][];
         };
         /** Progress */
         Progress: {
@@ -211,6 +257,27 @@ export interface components {
             by_state: {
                 [key: string]: number;
             };
+        };
+        /** SenseOut */
+        SenseOut: {
+            /** Headword */
+            headword: string;
+            /** Pos */
+            pos: string;
+            /** Gloss */
+            gloss: string;
+            /** Definition */
+            definition: string;
+            /** Native */
+            native: string;
+            /** Level */
+            level: string;
+            /** Origin */
+            origin: string;
+            /** Pronunciation */
+            pronunciation: string;
+            /** Examples */
+            examples: string[];
         };
         /** ValidationError */
         ValidationError: {
@@ -283,6 +350,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Language"][];
+                };
+            };
+        };
+    };
+    lookup_api_dictionary__code__get: {
+        parameters: {
+            query: {
+                lemma: string[];
+            };
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

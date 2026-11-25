@@ -12,3 +12,4 @@ frontend/.svelte-kit/
 frontend/test-results/
 frontend/playwright-report/
 src/lmx/static/
+dicts/

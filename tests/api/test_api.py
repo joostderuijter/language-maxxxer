@@ -14,7 +14,25 @@ def test_health(client: TestClient) -> None:
 
 
 def test_languages(client: TestClient) -> None:
-    assert client.get('/api/languages').json() == [{'code': 'ko', 'name': 'Korean'}]
+    (ko,) = client.get('/api/languages').json()
+    assert (ko['code'], ko['name'], ko['dictionary']['source']) == ('ko', 'Korean', 'test fixture')
+
+
+def test_dictionary_lookup_first_known_candidate(client: TestClient) -> None:
+    r = client.get('/api/dictionary/ko', params={'lemma': ['없는말', '눈']}).json()
+    assert r['lemma'] == '눈'
+    assert [s['gloss'] for s in r['senses']] == ['eye', 'snow']
+    assert r['senses'][0]['examples'] == ['지수는 눈이 크다.', '눈을 감아 봐.']
+    assert r['senses'][0]['level'] == 'beginner'
+    assert [i['text'] for i in r['idioms']] == ['눈이 높다', '눈 감으면 코 베어 갈 세상']
+
+
+def test_dictionary_lookup_unknown_and_validation(client: TestClient) -> None:
+    assert client.get('/api/dictionary/ko', params={'lemma': ['없는말']}).json() == {
+        'lemma': '없는말', 'senses': [], 'idioms': []}  # fmt: skip
+    assert client.get('/api/dictionary/ko').status_code == 422
+    assert client.get('/api/dictionary/ko', params={'lemma': ['a'] * 11}).status_code == 422
+    assert client.get('/api/dictionary/xx', params={'lemma': ['a']}).status_code == 404
 
 
 def test_progress_starts_at_zero(client: TestClient) -> None:

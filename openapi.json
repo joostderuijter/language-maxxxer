@@ -45,6 +45,60 @@
         }
       }
     },
+    "/api/dictionary/{code}": {
+      "get": {
+        "summary": "Lookup",
+        "description": "Meanings of the first candidate lemma the dictionary knows (a token's lemmas, most specific first).",
+        "operationId": "lookup_api_dictionary__code__get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "lemma",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 10,
+              "title": "Lemma"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LookupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/progress/{code}": {
       "get": {
         "summary": "Progress",
@@ -369,6 +423,39 @@
         ],
         "title": "Health"
       },
+      "IdiomOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "gloss": {
+            "type": "string",
+            "title": "Gloss"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "native": {
+            "type": "string",
+            "title": "Native"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "kind",
+          "gloss",
+          "definition",
+          "native"
+        ],
+        "title": "IdiomOut"
+      },
       "ImportRequest": {
         "properties": {
           "language": {
@@ -421,14 +508,51 @@
           "name": {
             "type": "string",
             "title": "Name"
+          },
+          "dictionary": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dictionary"
           }
         },
         "type": "object",
         "required": [
           "code",
-          "name"
+          "name",
+          "dictionary"
         ],
         "title": "Language"
+      },
+      "LookupResponse": {
+        "properties": {
+          "lemma": {
+            "type": "string",
+            "title": "Lemma"
+          },
+          "senses": {
+            "items": {
+              "$ref": "#/components/schemas/SenseOut"
+            },
+            "type": "array",
+            "title": "Senses"
+          },
+          "idioms": {
+            "items": {
+              "$ref": "#/components/schemas/IdiomOut"
+            },
+            "type": "array",
+            "title": "Idioms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lemma",
+          "senses",
+          "idioms"
+        ],
+        "title": "LookupResponse"
       },
       "Progress": {
         "properties": {
@@ -455,6 +579,62 @@
           "by_state"
         ],
         "title": "Progress"
+      },
+      "SenseOut": {
+        "properties": {
+          "headword": {
+            "type": "string",
+            "title": "Headword"
+          },
+          "pos": {
+            "type": "string",
+            "title": "Pos"
+          },
+          "gloss": {
+            "type": "string",
+            "title": "Gloss"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "native": {
+            "type": "string",
+            "title": "Native"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "pronunciation": {
+            "type": "string",
+            "title": "Pronunciation"
+          },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Examples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "headword",
+          "pos",
+          "gloss",
+          "definition",
+          "native",
+          "level",
+          "origin",
+          "pronunciation",
+          "examples"
+        ],
+        "title": "SenseOut"
       },
       "ValidationError": {
         "properties": {

@@ -7,6 +7,8 @@ export type AnalyzedToken = components['schemas']['AnalyzedToken'];
 export type WordState = components['schemas']['WordState'];
 export type EventKind = components['schemas']['EventKind'];
 export type ImportResult = components['schemas']['ImportResult'];
+export type Lookup = components['schemas']['LookupResponse'];
+export type Sense = components['schemas']['SenseOut'];
 
 // fetch is looked up per call (not captured at import), so tests can stub globalThis.fetch
 export const api = createClient<paths>({
@@ -38,4 +40,9 @@ export async function markWord(language: string, lemma: string, kind: EventKind)
 
 export async function importWords(language: string, csv: string): Promise<ImportResult> {
   return unwrap(await api.POST('/api/knowledge/import', { body: { language, csv, source: 'import:csv' } }));
+}
+
+/** Meanings of the first candidate (most specific first) the dictionary knows. */
+export async function lookup(language: string, lemmas: string[]): Promise<Lookup> {
+  return unwrap(await api.GET('/api/dictionary/{code}', { params: { path: { code: language }, query: { lemma: lemmas } } }));
 }

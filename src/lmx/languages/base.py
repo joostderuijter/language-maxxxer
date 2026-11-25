@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from .dictionary import Idiom, Sense
+
 
 @dataclass(frozen=True)
 class Token:
@@ -35,4 +37,16 @@ class LanguagePack(Protocol):
 
     def analyze_many(self, texts: list[str]) -> list[list[Token]]:
         """Same as analyze() for many texts (packs may batch)."""
+        ...
+
+    def lookup(self, lemma: str) -> list[Sense]:
+        """Dictionary senses of a lemma, most common first; [] if unknown (or no dictionary installed)."""
+        ...
+
+    def idioms(self, lemma: str) -> list[Idiom]:
+        """Fixed expressions / proverbs listed under the lemma."""
+        ...
+
+    def dictionary_info(self) -> dict[str, str]:
+        """What dictionary is installed (source, revision, license, counts); {} if none."""
         ...

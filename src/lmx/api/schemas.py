@@ -14,6 +14,33 @@ class Health(BaseModel):
 class Language(BaseModel):
     code: str
     name: str
+    dictionary: dict[str, str]  # source, revision, license, counts; {} when no dictionary is installed
+
+
+class SenseOut(BaseModel):
+    headword: str
+    pos: str
+    gloss: str
+    definition: str
+    native: str
+    level: str
+    origin: str
+    pronunciation: str
+    examples: list[str]
+
+
+class IdiomOut(BaseModel):
+    text: str
+    kind: str
+    gloss: str
+    definition: str
+    native: str
+
+
+class LookupResponse(BaseModel):
+    lemma: str  # the candidate that matched (or the first one asked, if none did)
+    senses: list[SenseOut]
+    idioms: list[IdiomOut]
 
 
 class Progress(BaseModel):

@@ -6,17 +6,21 @@ Rules (learned the hard way in kr-miner):
 - A prefix glued to a noun is a candidate too (맨손 -> 맨손, 손).
 - Root words (XR) also get the 하다 form (깨끗 -> 깨끗하다).
 - Adverbs ending in 게/히 also point at their adjective (이렇게 -> 이렇다, 조용히 -> 조용하다).
-- Proper nouns, bound nouns, pronouns, numerals, interjections, determiners and lone single syllables are "weak":
-  mostly names, fillers and mis-splits, they only count when the word list knows them.
+- Proper nouns, bound nouns, pronouns, numerals, interjections and determiners are "weak": mostly names and fillers,
+  they only count when the word list knows them. So is a lone single syllable the dictionary doesn't know (a Kiwi
+  mis-split like 정 from 정박에); real one-syllable words (밥, 물, 집) are in the dictionary and count normally.
 - Particles, endings, punctuation, numbers and foreign script are not words to learn.
 """
 
+from pathlib import Path
 from typing import cast
 
 from kiwipiepy import Kiwi
 from kiwipiepy import Token as KToken
 
 from ..base import Token
+from ..dictionary import Idiom, Sense
+from .krdict import KrDict
 
 VERBAL = {'VV': 'verb', 'VA': 'adjective', 'VX': 'verb'}
 NOUNISH = {'NNG', 'XR'}
@@ -38,8 +42,18 @@ class KoreanPack:
     code = 'ko'
     name = 'Korean'
 
-    def __init__(self) -> None:
+    def __init__(self, dictionary: Path | None = None) -> None:
         self.kiwi = Kiwi()
+        self.dict = KrDict(dictionary)
+
+    def lookup(self, lemma: str) -> list[Sense]:
+        return self.dict.senses(lemma)
+
+    def idioms(self, lemma: str) -> list[Idiom]:
+        return self.dict.idioms(lemma)
+
+    def dictionary_info(self) -> dict[str, str]:
+        return self.dict.meta()
 
     def analyze(self, text: str) -> list[Token]:
         return self._tokens(text, cast(list[KToken], self.kiwi.tokenize(text)))
@@ -82,8 +96,7 @@ class KoreanPack:
             i += 1
         return out
 
-    @staticmethod
-    def _word(t: KToken, tag: str, prev: KToken | None, nxt: KToken | None) -> Word | None:
+    def _word(self, t: KToken, tag: str, prev: KToken | None, nxt: KToken | None) -> Word | None:
         """What learnable word starts at Kiwi token `t` (None: particle, ending, punctuation...)."""
         if tag in WEAK:
             return [t.form, t.lemma or ''], 'other', t.form, True, ()
@@ -104,7 +117,8 @@ class KoreanPack:
             if tag == 'XR':
                 cands.append(noun + '하다')
             pos = 'verb' if extra and base_tag(extra[0]) == 'XSV' else 'adjective' if extra else 'noun'
-            return cands, pos, noun, all(len(c) == 1 for c in cands), extra
+            lone = all(len(c) == 1 for c in cands) and not any(self.dict.has(c) for c in cands)
+            return cands, pos, noun, lone, extra
         if tag in VERBAL:
             lemma = t.lemma or t.form + '다'
             lemma = LEMMA_FIX.get(lemma, lemma)

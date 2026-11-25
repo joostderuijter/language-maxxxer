@@ -3,6 +3,10 @@
 </script>
 
 <main>{@render children()}</main>
+<footer>
+  Korean dictionary: <a href="https://krdict.korean.go.kr" rel="noreferrer">한국어기초사전 (KRDict)</a>, National Institute of
+  Korean Language, CC BY-SA 3.0
+</footer>
 
 <style>
   :global(:root) {
@@ -25,5 +29,7 @@
     background: var(--accent); color: #fff;
   }
   :global(button:disabled) { opacity: 0.45; cursor: default; }
+  footer { max-width: 760px; margin: 0 auto; padding: 0 16px 24px; color: var(--muted); font-size: 12px; }
+  footer a { color: inherit; }
   main { max-width: 760px; margin: 0 auto; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); display: grid; gap: 14px; }
 </style>

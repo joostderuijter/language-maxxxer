@@ -13,3 +13,4 @@ Proposed decisions are discussed with the user (a software engineer) before they
 - [ADR-9: Tests on every layer; regressions must be caught](0009-testing.md): accepted
 - [ADR-10: Own Anki note type and deck](0010-anki-note-type.md): proposed
 - [ADR-11: Whisper on a shared GPU: first come, first served](0011-gpu-sharing.md): proposed
+- [ADR-12: Dictionaries are built into the Docker image](0012-dictionaries-in-image.md): accepted

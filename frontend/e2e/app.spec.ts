@@ -55,3 +55,14 @@ test('no horizontal scrolling', async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test('clicking a word shows its meaning from the dictionary', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Paste some Korean').fill('날씨가 좋네요');
+  await page.getByRole('button', { name: 'Analyse' }).click();
+  await page.getByTestId('analysed').getByRole('button', { name: '날씨가' }).click();
+  const panel = page.getByTestId('word-panel');
+  await expect(panel).toContainText('날씨');
+  await expect(panel).toContainText('weather'); // needs the real dictionary (built into the image)
+  await expect(page.getByRole('contentinfo')).toContainText('CC BY-SA');
+});

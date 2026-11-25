@@ -5,7 +5,7 @@ from hypothesis import strategies as st
 from lmx import languages
 from lmx.languages.base import LanguagePack
 
-from .contract import check_pack, check_tokens
+from .contract import check_dictionary, check_pack, check_tokens
 
 SAMPLES = {
     'ko': [
@@ -26,11 +26,18 @@ def pack(request: pytest.FixtureRequest) -> LanguagePack:
 
 
 def test_every_language_has_samples() -> None:
-    assert set(SAMPLES) == set(languages.available())
+    assert set(SAMPLES) == set(languages.available()) == set(KNOWN_WORD)
+
+
+KNOWN_WORD = {'ko': '밥'}
 
 
 def test_contract(pack: LanguagePack) -> None:
     check_pack(pack, SAMPLES[pack.code])
+
+
+def test_dictionary_contract(pack: LanguagePack) -> None:
+    check_dictionary(pack, KNOWN_WORD[pack.code])
 
 
 def test_registry() -> None:

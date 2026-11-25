@@ -40,8 +40,13 @@ Migaku / Kimchi Reader. Korean first; the architecture is multilingual (language
 - GitHub: `joostderuijter/language-maxxxer` (private; note the three x's), CI = .github/workflows/ci.yml.
 
 ## Roadmap
-v0.1 (now: skeleton done 2026-11-25): Korean pack, knowledge (events), CSV import, progress page, analyzer box.
-Next: dictionary (local KRDict) -> fixes weak single-syllable nouns (xfail), content library (Jellyfin + folders) with
+v0.1 (2026-11-25): Korean pack, knowledge (events), CSV import, progress page, analyzer box. User's kr-miner word list
+imported (20,122 words, 6,851 known) on the server via the CSV import.
+Done: dictionary (KRDict built into the image, ADR-12; `GET /api/dictionary/{code}?lemma=…`, WordPanel; one-syllable
+nouns are weak only when the dictionary lacks them). Local dev: build `dicts/ko-krdict.sqlite` with
+`PYTHONPATH=src uv run --no-project --with pyarrow python -m lmx.languages.korean.krdict <parquet> dicts/ko-krdict.sqlite`.
+KRDict also has 1,374 grammar expressions (kind='grammar') = the source for the grammar-point list later.
+Next: content library (Jellyfin + folders) with
 lemma counts + coverage + "next up", Anki import of known words, reader. Later: grammar points (curated TOPIK list,
 Kiwi patterns), vocabulary-size test, quizzes, automatic cards + feedback model, starter path (import a deck like
 Refold KO1K as curriculum; generate an i+1-ordered starter set from content), YouTube discovery (subtitles only),
