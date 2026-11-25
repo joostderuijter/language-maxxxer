@@ -1,0 +1,25 @@
+# Golden tests for the Korean pack: sentence -> expected learnable words.
+# Each word: surface: [lemma candidates, most specific first]; "weak" words get a trailing "(weak)".
+# Review rule: every entry was checked by a human. Known wrong behaviour goes under `known_issues` (xfail) so a fix
+# shows up as XPASS and the case moves up into `cases`.
+cases:
+  - text: 무난하고 순차적으로 이렇게 했어요.
+    words: {무난하고: [무난하다, 무난], 순차적으로: [순차적, 순차], 이렇게: [이렇게, 이렇다], 했어요: [하다]}
+  - text: 맨손으로 깨끗하게 청소했다
+    words: {맨손으로: [맨손, 손], 깨끗하게: [깨끗하다, 깨끗], 청소했다: [청소하다, 청소]}
+  - text: 조용히 사기꾼을 기다렸다
+    words: {조용히: [조용히, 조용하다], 사기꾼을: [사기꾼, 사기], 기다렸다: [기다리다]}
+  - text: 그래 그런 거야
+    words: {그래: [그래 (weak)], 그런: [그렇다], 거야: [거 (weak)]}   # 그래 alone = interjection "yeah"
+  - text: 친구들이랑 같이 먹었어
+    words: {친구들이랑: [친구], 같이: [같이], 먹었어: [먹다]}
+  - text: 너무 추워서 집에 있었어요
+    words: {너무: [너무], 추워서: [춥다], 집에: [집 (weak)], 있었어요: [있다]}
+known_issues:
+  - text: 그래서 배신당했어?
+    words: {그래서: [그래서], 배신당했어: [배신당하다, 배신]}
+    reason: Kiwi splits 당하다 off as a separate verb; should be one passive word (needs a 당하다 derivation rule)
+  - text: 밥을 먹었다
+    words: {밥을: [밥], 먹었다: [먹다]}
+    reason: single-syllable nouns are marked weak (kr-miner rule against mis-splits); real words like 밥/물/집/돈 need
+      the dictionary to tell them apart (weak only if not in the dictionary)

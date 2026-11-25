@@ -1,0 +1,41 @@
+/** Typed API client, generated from the backend's OpenAPI schema (ADR-7). Never call fetch on /api by hand. */
+import createClient from 'openapi-fetch';
+import type { components, paths } from './schema';
+
+export type Progress = components['schemas']['Progress'];
+export type AnalyzedToken = components['schemas']['AnalyzedToken'];
+export type WordState = components['schemas']['WordState'];
+export type EventKind = components['schemas']['EventKind'];
+export type ImportResult = components['schemas']['ImportResult'];
+
+// fetch is looked up per call (not captured at import), so tests can stub globalThis.fetch
+export const api = createClient<paths>({
+  baseUrl: globalThis.location?.origin ?? '', // same origin as the page (the API serves the frontend)
+  fetch: (req) => globalThis.fetch(req)
+});
+
+export class ApiError extends Error {}
+
+function unwrap<T>(r: { data?: T; error?: unknown; response: Response }): T {
+  if (r.data === undefined) {
+    const detail = (r.error as { detail?: unknown } | undefined)?.detail;
+    throw new ApiError(typeof detail === 'string' ? detail : `request failed (${r.response.status})`);
+  }
+  return r.data;
+}
+
+export async function getProgress(code: string): Promise<Progress> {
+  return unwrap(await api.GET('/api/progress/{code}', { params: { path: { code } } }));
+}
+
+export async function analyze(language: string, text: string): Promise<AnalyzedToken[]> {
+  return unwrap(await api.POST('/api/analyze', { body: { language, text } })).tokens;
+}
+
+export async function markWord(language: string, lemma: string, kind: EventKind): Promise<WordState> {
+  return unwrap(await api.POST('/api/knowledge/events', { body: { language, lemma, kind } })).state;
+}
+
+export async function importWords(language: string, csv: string): Promise<ImportResult> {
+  return unwrap(await api.POST('/api/knowledge/import', { body: { language, csv, source: 'import:csv' } }));
+}

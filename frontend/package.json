@@ -1,0 +1,41 @@
+{
+  "name": "language-maxxer-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "api:generate": "openapi-typescript ../openapi.json -o src/lib/api/schema.d.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@sveltejs/adapter-static": "^4.0.1",
+    "@sveltejs/kit": "^3.1.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/svelte": "^5.4.2",
+    "@types/node": "^22.20.5",
+    "jsdom": "^31.0.0",
+    "openapi-typescript": "^7.13.0",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  }
+}

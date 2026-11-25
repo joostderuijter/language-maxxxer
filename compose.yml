@@ -1,0 +1,14 @@
+# language-maxxer. Locally: `docker compose up -d --build` -> http://localhost:8000
+# On the home server it lives in /srv/language-maxxer behind Caddy (see compose.server.yml).
+services:
+  language-maxxer:
+    build: .
+    container_name: language-maxxer
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/Amsterdam}
+      LMX_DATA_DIR: /data
+    volumes:
+      - ./data:/data            # everything the app knows about you; back this up
+    ports:
+      - "${LMX_PORT:-8000}:8000"

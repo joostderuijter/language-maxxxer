@@ -1,0 +1,534 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "language-maxxer",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/languages": {
+      "get": {
+        "summary": "List Languages",
+        "operationId": "list_languages_api_languages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Language"
+                  },
+                  "type": "array",
+                  "title": "Response List Languages Api Languages Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progress/{code}": {
+      "get": {
+        "summary": "Progress",
+        "operationId": "progress_api_progress__code__get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Progress"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analyze": {
+      "post": {
+        "summary": "Analyze",
+        "operationId": "analyze_api_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/events": {
+      "post": {
+        "summary": "Add Event",
+        "operationId": "add_event_api_knowledge_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/import": {
+      "post": {
+        "summary": "Import Words",
+        "operationId": "import_words_api_knowledge_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalyzeRequest": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "examples": [
+              "ko"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "text"
+        ],
+        "title": "AnalyzeRequest"
+      },
+      "AnalyzeResponse": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyzedToken"
+            },
+            "type": "array",
+            "title": "Tokens"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "tokens"
+        ],
+        "title": "AnalyzeResponse"
+      },
+      "AnalyzedToken": {
+        "properties": {
+          "surface": {
+            "type": "string",
+            "title": "Surface"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "lemmas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Lemmas"
+          },
+          "pos": {
+            "type": "string",
+            "title": "Pos"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "weak": {
+            "type": "boolean",
+            "title": "Weak"
+          },
+          "state": {
+            "$ref": "#/components/schemas/WordState"
+          },
+          "lemma": {
+            "type": "string",
+            "title": "Lemma"
+          }
+        },
+        "type": "object",
+        "required": [
+          "surface",
+          "start",
+          "end",
+          "lemmas",
+          "pos",
+          "key",
+          "weak",
+          "state",
+          "lemma"
+        ],
+        "title": "AnalyzedToken"
+      },
+      "EventKind": {
+        "type": "string",
+        "enum": [
+          "marked_known",
+          "marked_unknown",
+          "ignored",
+          "seen",
+          "card_added",
+          "mature",
+          "lapsed",
+          "quiz_right",
+          "quiz_wrong"
+        ],
+        "title": "EventKind"
+      },
+      "EventRequest": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "lemma": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Lemma"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "lemma",
+          "kind"
+        ],
+        "title": "EventRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "version"
+        ],
+        "title": "Health"
+      },
+      "ImportRequest": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "csv": {
+            "type": "string",
+            "title": "Csv",
+            "description": "lines \"lemma,state\"; state = known|learning|seen|ignored|unknown, or the Migaku-style numbers 2=known 1=seen 0=learning 3=ignored"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 64,
+            "title": "Source",
+            "default": "import:csv"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "csv"
+        ],
+        "title": "ImportRequest"
+      },
+      "ImportResult": {
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "title": "Imported"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "imported",
+          "skipped"
+        ],
+        "title": "ImportResult"
+      },
+      "Language": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "Language"
+      },
+      "Progress": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "words_known": {
+            "type": "integer",
+            "title": "Words Known"
+          },
+          "by_state": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "words_known",
+          "by_state"
+        ],
+        "title": "Progress"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WordState": {
+        "type": "string",
+        "enum": [
+          "unknown",
+          "seen",
+          "learning",
+          "known",
+          "ignored"
+        ],
+        "title": "WordState"
+      },
+      "WordStatus": {
+        "properties": {
+          "lemma": {
+            "type": "string",
+            "title": "Lemma"
+          },
+          "state": {
+            "$ref": "#/components/schemas/WordState"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lemma",
+          "state",
+          "confidence"
+        ],
+        "title": "WordStatus"
+      }
+    }
+  }
+}
