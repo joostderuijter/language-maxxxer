@@ -82,3 +82,11 @@ test('a sentence with exactly one new word is highlighted', async ({ page }) => 
   }
   await expect(page.getByTestId('legend')).toContainText('sentences');
 });
+
+test('library page is reachable from the nav and explains when Jellyfin is not connected', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Library' }).click();
+  await expect(page.getByRole('heading', { name: 'Library' })).toBeVisible();
+  // the e2e image has no Jellyfin key: the page must say so instead of showing an empty list
+  await expect(page.getByTestId('library-disabled').or(page.getByTestId('library-status'))).toBeVisible();
+});

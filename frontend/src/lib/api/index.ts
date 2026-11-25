@@ -10,6 +10,10 @@ export type ImportResult = components['schemas']['ImportResult'];
 export type Lookup = components['schemas']['LookupResponse'];
 export type Analysis = components['schemas']['AnalyzeResponse'];
 export type SentenceInfo = components['schemas']['SentenceOut'];
+export type LibraryStatus = components['schemas']['LibraryStatus'];
+export type SeriesInfo = components['schemas']['SeriesOut'];
+export type Episode = components['schemas']['ItemOut'];
+export type NewWord = components['schemas']['NewWordOut'];
 export type Sense = components['schemas']['SenseOut'];
 
 // fetch is looked up per call (not captured at import), so tests can stub globalThis.fetch
@@ -47,4 +51,24 @@ export async function importWords(language: string, csv: string): Promise<Import
 /** Meanings of the first candidate (most specific first) the dictionary knows. */
 export async function lookup(language: string, lemmas: string[]): Promise<Lookup> {
   return unwrap(await api.GET('/api/dictionary/{code}', { params: { path: { code: language }, query: { lemma: lemmas } } }));
+}
+
+export async function libraryStatus(): Promise<LibraryStatus> {
+  return unwrap(await api.GET('/api/library/status'));
+}
+
+export async function librarySync(): Promise<void> {
+  unwrap(await api.POST('/api/library/sync'));
+}
+
+export async function librarySeries(): Promise<SeriesInfo[]> {
+  return unwrap(await api.GET('/api/library/series'));
+}
+
+export async function seriesEpisodes(name: string): Promise<Episode[]> {
+  return unwrap(await api.GET('/api/library/series/{name}', { params: { path: { name } } }));
+}
+
+export async function episodeWords(id: number, limit = 30): Promise<NewWord[]> {
+  return unwrap(await api.GET('/api/library/items/{item_id}/words', { params: { path: { item_id: id }, query: { limit } } }));
 }

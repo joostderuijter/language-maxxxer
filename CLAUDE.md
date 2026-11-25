@@ -57,7 +57,11 @@ mounts; subtitles only this round, Whisper later; analysis versioned; transparen
   (episodes with a Korean subtitle/audio track), `content/library.py` (sync: add/update/remove, re-analyse on file
   change / new Korean subs / errors; pending = new or analysed with another `pack.version`; analyze; Ingest worker
   with run_once/trigger/state). LanguagePack.version (Korean: ko<RULES>-kiwi<ver>-dict<rev>). Step 3 (old text): sources (Jellyfin client, folder) +
-  background ingestion + analyzer version. Step 4: API + Library page. Step 5: "next up" (ADR-13).
+  background ingestion + analyzer version.
+  Step 4 DONE: `api/library.py` router (status, sync, series, episodes with live stats, new words per episode),
+  Library pages (/library, /library/[series]) with coverage bars, new-word chips -> WordPanel. Server: .env has
+  LMX_JELLYFIN_API_KEY (copied from kr-miner's key), media mounted read-only at Jellyfin's paths.
+  Step 4 (old): API + Library page. Step 5: "next up" (ADR-13).
 Then: content library (Jellyfin + folders) with
 lemma counts + coverage + "next up", Anki import of known words, reader. Later: grammar points (curated TOPIK list,
 Kiwi patterns), vocabulary-size test, quizzes, automatic cards + feedback model, starter path (import a deck like
