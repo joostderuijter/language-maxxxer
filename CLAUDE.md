@@ -39,6 +39,13 @@ Migaku / Kimchi Reader. Korean first; the architecture is multilingual (language
 - Server rules (same as kr-miner/yt-shelf): only `/srv/language-maxxer` + this container; announce changes; no sudo.
 - GitHub: `joostderuijter/language-maxxxer` (private; note the three x's), CI = .github/workflows/ci.yml.
 
+## Where we paused (2026-11-25)
+- Library live; first ingestion was running on the server (~1,977 Korean episodes from Jellyfin; 261 without Korean
+  subtitles = shows kr-miner transcribed with its own Whisper, which language-maxxer can't see by design).
+- Open question for the user: next do step 5 "Next up" (ADR-13, transparent ranking) or Whisper for episodes without
+  subtitles (ADR-11, shared GPU first come first served, mark Whisper text as lower confidence) first.
+- Known issue (strict xfail): 배신당했어 -> 배신 + 당하다 (needs a 당하다 derivation rule).
+
 ## Roadmap
 v0.1 (2026-11-25): Korean pack, knowledge (events), CSV import, progress page, analyzer box. User's kr-miner word list
 imported (20,122 words, 6,851 known) on the server via the CSV import.
