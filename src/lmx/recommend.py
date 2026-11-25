@@ -91,7 +91,8 @@ def recommend(cands: Sequence[Candidate], watch: dict[str, WatchState], limit: i
             'continue': 1.0 if c.item_id in cont else 0.0,
         }
         score = sum(WEIGHTS[k] * v for k, v in parts.items())
-        reasons = [f'{cov * 100:.0f}% known' + (' (a stretch)' if cov < SWEET[0] else '')]
+        shown = round(cov * 100)  # the label must agree with the number the user sees
+        reasons = [f'{shown}% known' + (' (a stretch)' if shown < SWEET[0] * 100 else '')]
         if c.stats.one_new:
             reasons.append(f'{c.stats.one_new} sentences with one new word')
         if c.item_id in cont:

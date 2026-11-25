@@ -88,3 +88,11 @@ def test_at_most_two_per_show_and_limit() -> None:
     assert [r.candidate.series_key for r in recs] == ['rm', 'rm', 'wm']
     assert recommend(eps, {}, limit=10) and len(recommend(eps, {}, limit=10)) == 4
     assert recommend([], {}) == []
+
+
+def test_stretch_label_agrees_with_the_shown_number() -> None:
+    """94.9 % is shown as '95%': calling it a stretch next to that number contradicts itself."""
+    almost = Candidate(1, 'j', 's', 'S', 1, 1, 'E', ItemStats(100, 1000, 949, 5, 10))
+    assert recommend([almost], {})[0].reasons[0] == '95% known'
+    under = Candidate(2, 'k', 's', 'S', 1, 2, 'E', ItemStats(100, 1000, 944, 5, 10))
+    assert recommend([under], {})[0].reasons[0] == '94% known (a stretch)'
