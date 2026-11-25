@@ -1,0 +1,21 @@
+# language-maxxer on the home server: /srv/language-maxxer, behind Caddy at https://lm.joost.im (Tailscale only,
+# no auth yet: never expose publicly). Deployed with scripts/deploy.sh.
+services:
+  language-maxxer:
+    build: .
+    container_name: language-maxxer
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/Amsterdam}
+      LMX_DATA_DIR: /data
+    volumes:
+      - ./data:/data
+    networks: [caddy]
+    labels:
+      caddy: lm.joost.im
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+      caddy.tls: internal
+
+networks:
+  caddy:
+    external: true

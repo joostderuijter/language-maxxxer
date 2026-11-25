@@ -31,6 +31,14 @@ Migaku / Kimchi Reader. Korean first; the architecture is multilingual (language
 - Dev: `uv run python -m lmx` (port 8000) + `cd frontend && npm run dev` (proxies /api).
 - npm installs use `--before=<date two weeks ago>`; `openapi-typescript` has an npm override to accept TS 6.
 
+## Deployment
+- Home server: `/srv/language-maxxer` (container `language-maxxer`), https://lm.joost.im via caddy-docker-proxy
+  labels (`tls internal`, Tailscale only, **no auth yet: never expose publicly**). `scripts/deploy.sh` = rsync (never
+  `data/`/.env) + `docker compose -f compose.server.yml up -d --build` + health wait. Locally: `compose.yml` (port 8000).
+- Never run the e2e suite against the live server (it imports test words into real data).
+- Server rules (same as kr-miner/yt-shelf): only `/srv/language-maxxer` + this container; announce changes; no sudo.
+- GitHub: `joostderuijter/language-maxxxer` (private; note the three x's), CI = .github/workflows/ci.yml.
+
 ## Roadmap
 v0.1 (now: skeleton done 2026-11-25): Korean pack, knowledge (events), CSV import, progress page, analyzer box.
 Next: dictionary (local KRDict) -> fixes weak single-syllable nouns (xfail), content library (Jellyfin + folders) with
