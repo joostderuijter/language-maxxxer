@@ -46,7 +46,14 @@ Done: dictionary (KRDict built into the image, ADR-12; `GET /api/dictionary/{cod
 nouns are weak only when the dictionary lacks them). Local dev: build `dicts/ko-krdict.sqlite` with
 `PYTHONPATH=src uv run --no-project --with pyarrow python -m lmx.languages.korean.krdict <parquet> dicts/ko-krdict.sqlite`.
 KRDict also has 1,374 grammar expressions (kind='grammar') = the source for the grammar-point list later.
-Next: content library (Jellyfin + folders) with
+In progress: content library (user OK'd 2026-11-25: read-only Jellyfin key (kr-miner's for now) + read-only media
+mounts; subtitles only this round, Whisper later; analysis versioned; transparent "next up" formula = ADR-13).
+  Step 1 DONE: tables content_items/sentences/words/word_lemmas/occurrences (migration 0002), `content/store.py`
+  (save_analysis, live stats per user: coverage, new words, 1T sentences; property test = same rules as
+  comprehension.py). A sentence = one subtitle line.
+  Step 2: subtitles (.srt parse, embedded Korean track via ffmpeg). Step 3: sources (Jellyfin client, folder) +
+  background ingestion + analyzer version. Step 4: API + Library page. Step 5: "next up" (ADR-13).
+Then: content library (Jellyfin + folders) with
 lemma counts + coverage + "next up", Anki import of known words, reader. Later: grammar points (curated TOPIK list,
 Kiwi patterns), vocabulary-size test, quizzes, automatic cards + feedback model, starter path (import a deck like
 Refold KO1K as curriculum; generate an i+1-ordered starter set from content), YouTube discovery (subtitles only),
