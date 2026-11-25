@@ -19,6 +19,8 @@ RUN mkdir -p /dicts && PYTHONPATH=src uv run --no-project --with pyarrow==21.0.0
     python -m lmx.languages.korean.krdict krdict.parquet /dicts/ko-krdict.sqlite
 
 FROM python:3.12-slim-bookworm
+# ffmpeg/ffprobe: reading subtitle tracks out of video files
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg tzdata && rm -rf /var/lib/apt/lists/*
 COPY --from=ghcr.io/astral-sh/uv:0.10.4 /uv /usr/local/bin/uv
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_PYTHON_DOWNLOADS=never \
